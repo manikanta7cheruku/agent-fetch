@@ -1,0 +1,45 @@
+{
+  "coord": {
+    "lon": 78.5511,
+    "lat": 17.3502
+  },
+  "weather": [
+    {
+      "id": 721,
+      "main": "Haze",
+      "description": "haze",
+      "icon": "50n"
+    }
+  ],
+  "base": "stations",
+  "main": {
+    "temp": 17.16,
+    "feels_like": 16.94,
+    "temp_min": 17.16,
+    "temp_max": 18.66,
+    "pressure": 1016,
+    "humidity": 77,
+    "sea_level": 1016,
+    "grnd_level": 952
+  },
+  "visibility": 4000,
+  "wind": {
+    "speed": 2.57,
+    "deg": 110
+  },
+  "clouds": {
+    "all": 100
+  },
+  "dt": 1766333893,
+  "sys": {
+    "type": 1,
+    "id": 9214,
+    "country": "IN",
+    "sunrise": 1766279466,
+    "sunset": 1766319388
+  },
+  "timezone": 19800,
+  "id": 1269843,
+  "name": "LB Nagar",
+  "cod": 200
+}

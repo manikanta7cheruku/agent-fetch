@@ -1,0 +1,46 @@
+{
+  "coord": {
+    "lon": 80.2667,
+    "lat": 13.1667
+  },
+  "weather": [
+    {
+      "id": 801,
+      "main": "Clouds",
+      "description": "few clouds",
+      "icon": "02n"
+    }
+  ],
+  "base": "stations",
+  "main": {
+    "temp": 24.38,
+    "feels_like": 24.83,
+    "temp_min": 23.95,
+    "temp_max": 24.54,
+    "pressure": 1015,
+    "humidity": 75,
+    "sea_level": 1015,
+    "grnd_level": 1014
+  },
+  "visibility": 10000,
+  "wind": {
+    "speed": 0.45,
+    "deg": 3,
+    "gust": 0.89
+  },
+  "clouds": {
+    "all": 20
+  },
+  "dt": 1766333780,
+  "sys": {
+    "type": 2,
+    "id": 2104103,
+    "country": "IN",
+    "sunrise": 1766278588,
+    "sunset": 1766319442
+  },
+  "timezone": 19800,
+  "id": 1263968,
+  "name": "Manali",
+  "cod": 200
+}

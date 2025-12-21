@@ -1,0 +1,45 @@
+{
+  "coord": {
+    "lon": 78.5683,
+    "lat": 17.3303
+  },
+  "weather": [
+    {
+      "id": 721,
+      "main": "Haze",
+      "description": "haze",
+      "icon": "50n"
+    }
+  ],
+  "base": "stations",
+  "main": {
+    "temp": 16.94,
+    "feels_like": 16.7,
+    "temp_min": 16.94,
+    "temp_max": 18.43,
+    "pressure": 1016,
+    "humidity": 77,
+    "sea_level": 1016,
+    "grnd_level": 953
+  },
+  "visibility": 4000,
+  "wind": {
+    "speed": 2.57,
+    "deg": 110
+  },
+  "clouds": {
+    "all": 100
+  },
+  "dt": 1766330407,
+  "sys": {
+    "type": 1,
+    "id": 9214,
+    "country": "IN",
+    "sunrise": 1766279460,
+    "sunset": 1766319386
+  },
+  "timezone": 19800,
+  "id": 1269843,
+  "name": "Vanasthalipuram",
+  "cod": 200
+}

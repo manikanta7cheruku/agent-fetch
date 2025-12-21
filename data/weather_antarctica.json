@@ -1,0 +1,43 @@
+{
+  "coord": {
+    "lon": 16.4063,
+    "lat": -78.1586
+  },
+  "weather": [
+    {
+      "id": 804,
+      "main": "Clouds",
+      "description": "overcast clouds",
+      "icon": "04n"
+    }
+  ],
+  "base": "stations",
+  "main": {
+    "temp": -24.83,
+    "feels_like": -31.83,
+    "temp_min": -24.83,
+    "temp_max": -24.83,
+    "pressure": 990,
+    "humidity": 88,
+    "sea_level": 990,
+    "grnd_level": 650
+  },
+  "visibility": 10000,
+  "wind": {
+    "speed": 3.82,
+    "deg": 356,
+    "gust": 4.75
+  },
+  "clouds": {
+    "all": 100
+  },
+  "dt": 1766333832,
+  "sys": {
+    "sunrise": 0,
+    "sunset": 0
+  },
+  "timezone": 0,
+  "id": 6255152,
+  "name": "Antarctica",
+  "cod": 200
+}

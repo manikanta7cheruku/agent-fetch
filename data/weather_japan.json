@@ -1,0 +1,45 @@
+{
+  "coord": {
+    "lon": 139.7531,
+    "lat": 35.6854
+  },
+  "weather": [
+    {
+      "id": 803,
+      "main": "Clouds",
+      "description": "broken clouds",
+      "icon": "04n"
+    }
+  ],
+  "base": "stations",
+  "main": {
+    "temp": 11.62,
+    "feels_like": 10.64,
+    "temp_min": 10.57,
+    "temp_max": 12.92,
+    "pressure": 1014,
+    "humidity": 69,
+    "sea_level": 1014,
+    "grnd_level": 1012
+  },
+  "visibility": 10000,
+  "wind": {
+    "speed": 7.2,
+    "deg": 10
+  },
+  "clouds": {
+    "all": 75
+  },
+  "dt": 1766333585,
+  "sys": {
+    "type": 2,
+    "id": 268395,
+    "country": "JP",
+    "sunrise": 1766353636,
+    "sunset": 1766388689
+  },
+  "timezone": 32400,
+  "id": 1861060,
+  "name": "Japan",
+  "cod": 200
+}

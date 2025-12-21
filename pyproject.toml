@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "agentic-weather-crypto"
+version = "0.1.0"
+description = "Weather & crypto dashboard with future-ready agentic architecture"
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+# Allow Python 3.10 up to (but not including) 3.14 → includes 3.13.x
+python = ">=3.10,<3.14"
+
+fastapi = "^0.115.0"
+uvicorn = { extras = ["standard"], version = "^0.30.0" }
+httpx = "^0.27.0"
+pydantic-settings = "^2.5.2"
+typer = "^0.12.3"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0.0"
+
+[tool.poetry.scripts]
+# This creates a CLI command called `app` → points to cli.main:app (Typer)
+app = "cli.main:app"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

@@ -1,0 +1,44 @@
+{
+  "coord": {
+    "lon": 45,
+    "lat": 25
+  },
+  "weather": [
+    {
+      "id": 804,
+      "main": "Clouds",
+      "description": "overcast clouds",
+      "icon": "04n"
+    }
+  ],
+  "base": "stations",
+  "main": {
+    "temp": 13.65,
+    "feels_like": 11.8,
+    "temp_min": 13.65,
+    "temp_max": 13.65,
+    "pressure": 1020,
+    "humidity": 28,
+    "sea_level": 1020,
+    "grnd_level": 930
+  },
+  "visibility": 10000,
+  "wind": {
+    "speed": 3.31,
+    "deg": 120,
+    "gust": 3.68
+  },
+  "clouds": {
+    "all": 92
+  },
+  "dt": 1766333932,
+  "sys": {
+    "country": "SA",
+    "sunrise": 1766288437,
+    "sunset": 1766326527
+  },
+  "timezone": 10800,
+  "id": 102358,
+  "name": "Saudi Arabia",
+  "cod": 200
+}
