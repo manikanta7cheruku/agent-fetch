@@ -72,38 +72,46 @@ function App() {
       const data = await res.json();
 
       if (!res.ok) {
-        // Backend sends { detail: "error message" } on errors
-        setError(data.detail || 'Request failed.');
-      } else {
-        setResult(data);
-        setRawJson(data.raw || data);
+  const msg = data.detail || 'Request failed.';
 
-        // Record history point for charts
-        const timeLabel = new Date().toLocaleTimeString(undefined, {
-          hour: '2-digit',
-          minute: '2-digit',
-        });
+  // If backend reports a rate-limit issue, show a friendly message
+  if (msg.toLowerCase().includes('rate-limited')) {
+    setError(
+      'Crypto data is temporarily unavailable because the provider rate limit was exceeded. Please try again in a few minutes.'
+    );
+  } else {
+    setError(msg);
+  }
+} else {
+  setResult(data);
+  setRawJson(data.raw || data);
 
-        if (mode === 'weather') {
-          setWeatherHistory((prev) => [
-            ...prev,
-            {
-              city: data.city,
-              timeLabel,
-              temperature: data.temperature_c,
-            },
-          ]);
-        } else {
-          setCryptoHistory((prev) => [
-            ...prev,
-            {
-              coin: data.coin_id,
-              timeLabel,
-              price: data.price_usd,
-            },
-          ]);
-        }
-      }
+  // Record history point for charts
+  const timeLabel = new Date().toLocaleTimeString(undefined, {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
+  if (mode === 'weather') {
+    setWeatherHistory((prev) => [
+      ...prev,
+      {
+        city: data.city,
+        timeLabel,
+        temperature: data.temperature_c,
+      },
+    ]);
+  } else {
+    setCryptoHistory((prev) => [
+      ...prev,
+      {
+        coin: data.coin_id,
+        timeLabel,
+        price: data.price_usd,
+      },
+    ]);
+  }
+}
     } catch (err) {
       console.error(err);
       setError('Network error. Is the backend running on http://localhost:8000?');

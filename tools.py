@@ -101,11 +101,20 @@ def get_crypto_price(coin: str) -> Dict[str, Any]:
             timeout=10.0,
         )
     except httpx.RequestError as exc:
+        # Network-level error (DNS, timeout, etc.)
         raise CryptoAPIError(f"Network error while calling crypto API: {exc}") from exc
 
+    # Special case: rate limit / 429 from CoinGecko
+    if response.status_code == 429:
+        raise CryptoAPIError(
+            "Crypto data provider is temporarily rate-limited. "
+            "Please try again in a few minutes."
+        )
+
+    # Any other non-success status
     if response.status_code != 200:
         raise CryptoAPIError(
-            f"Crypto API error (status {response.status_code}): {response.text}"
+            f"Crypto API error (status {response.status_code}). Please try again later."
         )
 
     data = response.json()
