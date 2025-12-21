@@ -16,7 +16,7 @@ import { Line } from 'react-chartjs-2';
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler);
 
 // Backend API base URL (FastAPI)
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://agent-fetch.onrender.com/api';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
 
 // Some suggested cities and coins to show as quick-select chips
 const SUGGESTED_CITIES = ['Hyderabad', 'London', 'New York', 'Tokyo', 'Sydney'];
