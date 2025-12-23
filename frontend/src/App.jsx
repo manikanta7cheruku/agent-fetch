@@ -292,7 +292,7 @@ function App() {
             <h1>Agentic Signals Console</h1>
             <span>Weather & crypto insights, built to evolve into an AI agent.</span>
           </div>
-          <div className="badge">Phase 1 · MVP</div>
+          <div className="badge">Signals · Phase 1 of 3</div>
         </header>
 
         <div className="main-grid">
@@ -403,39 +403,53 @@ function App() {
 
           {/* Right: System / Future Agent panel */}
           <aside className="card sidebar">
-            <div className="card-title">System</div>
-            <div className="sidebar-section">
-              <strong>Phase 1 · Direct Tools</strong>
-              This dashboard calls Python tools:
-              <br />
-              <code>get_weather(city)</code> and <code>get_crypto_price(coin)</code>.
-              <br />
-              Raw JSON is saved under:
-              <br />
-              <code>data/weather_*.json</code> and <code>data/crypto_*.json</code>.
-            </div>
-            <div className="sidebar-section">
-              <strong>Phase 2 · Agent Loop (Reserved)</strong>
-              In the next phase, this area will surface:
-              <br />• Scheduled checks (e.g. daily reports)
-              <br />• Alerts (e.g. BTC below threshold)
-              <br />• AI-generated summaries of trends.
-            </div>
-            <div className="sidebar-section">
-              <strong>Debug & Testing</strong>
-              You can also:
-              <br />• Call the API via Postman:
-              <br />
-              <code>/api/weather?city=...</code>
-              <br />
-              <code>/api/crypto?coin=...</code>
-              <br />• Use the CLI:
-              <br />
-              <code>poetry run app weather --city ...</code>
-              <br />
-              <code>poetry run app crypto --coin ...</code>
-            </div>
-          </aside>
+  <div className="card-title">System</div>
+
+  <div className="sidebar-section">
+    <strong>Phase 1 · Live Tools</strong>
+    This dashboard calls Python tools:
+    <br />
+    <code>get_weather(city)</code> and <code>get_crypto_price(coin)</code>.
+    <br />
+    Raw JSON is saved under:
+    <br />
+    <code>data/weather_*.json</code>
+    <br />
+    <code>data/crypto_*.json</code>.
+  </div>
+
+  <div className="sidebar-section">
+    <strong>Phase 2 · Chat + LLM (Planned)</strong>
+    Next, this project will add a chat assistant that:
+    <br />• Understands natural language questions
+    <br />• Calls these tools automatically
+    <br />• Combines weather + crypto into clear answers.
+  </div>
+
+  <div className="sidebar-section">
+    <strong>Phase 3 · Agentic Automation (Planned)</strong>
+    Future work:
+    <br />• Store history in a database
+    <br />• Trend analysis & AI summaries
+    <br />• Scheduler & condition-based alerts
+    <br />• Telegram notifications.
+  </div>
+
+  <div className="sidebar-section">
+    <strong>Debug & Testing</strong>
+    You can also:
+    <br />• Call the API via Postman:
+    <br />
+    <code>/api/weather?city=...</code>
+    <br />
+    <code>/api/crypto?coin=...</code>
+    <br />• Use the CLI:
+    <br />
+    <code>python -m cli.main weather --city ...</code>
+    <br />
+    <code>python -m cli.main crypto --coin ...</code>
+  </div>
+</aside>
         </div>
       </div>
     </div>

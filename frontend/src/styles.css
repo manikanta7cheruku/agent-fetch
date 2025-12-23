@@ -93,9 +93,97 @@ body {
   gap: 1.5rem;
 }
 
-@media (max-width: 900px) {
+/* Mobile layout */
+@media (max-width: 768px) {
+  .app-root {
+    padding: 0;                      /* no outer padding */
+    align-items: stretch;            /* shell fills vertically */
+    justify-content: flex-start;
+  }
+
+  .shell {
+    max-width: 100%;                 /* full width */
+    min-height: 100vh;               /* full height */
+    border-radius: 0;                /* remove big rounded frame */
+    padding: 3.5rem 1rem 1.25rem;      /* tighter padding */
+    box-shadow: none;                /* flatter look on mobile */
+  }
+
+  .shell-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .title-stack h1 {
+    font-size: 1.1rem;
+    letter-spacing: 0.05em;
+  }
+
+  .title-stack span {
+    font-size: 0.78rem;
+  }
+
+  .badge {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.6rem;
+  }
+
   .main-grid {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);  /* single column */
+    gap: 0.9rem;
+  }
+
+  .card {
+    padding: 0.9rem;
+    border-radius: 14px;
+  }
+
+  .card-title {
+    font-size: 0.78rem;
+    letter-spacing: 0.12em;
+  }
+
+  .form-row {
+    gap: 0.5rem;
+  }
+
+  .field-line {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .input {
+    font-size: 0.9rem;
+  }
+
+  .button {
+    width: 100%;                     /* full‑width action button */
+    justify-content: center;
+    font-size: 0.8rem;
+  }
+
+  .suggestions {
+    gap: 0.3rem;
+  }
+
+  .suggestion-chip {
+    font-size: 0.7rem;
+    padding: 0.15rem 0.45rem;
+  }
+
+  .result-block,
+  .chart-block {
+    margin-top: 0.7rem;
+  }
+
+  .sidebar {
+    gap: 0.65rem;
+  }
+
+  .sidebar-section {
+    font-size: 0.78rem;
   }
 }
 
