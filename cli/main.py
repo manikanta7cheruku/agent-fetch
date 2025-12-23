@@ -28,6 +28,7 @@ from tools import (
     get_crypto_price,
     get_weather,
 )
+from agent.simple_agent import run_agent # 
 
 # Create Typer app instance
 app = typer.Typer(help="Weather & crypto tools for the agentic dashboard.")
@@ -146,6 +147,30 @@ def crypto(
         typer.echo(f"Raw JSON saved to: {path}")
 
 
+@app.command()
+def chat(
+    message: str = typer.Option(
+        None,
+        "--message",
+        "-m",
+        help="Question for the AI agent about weather/crypto. If omitted, you'll be prompted.",
+    )
+) -> None:
+    """
+    Ask a natural language question to the AI agent.
+
+    Examples:
+      python -m cli.main chat -m "What's the weather in Hyderabad and BTC price?"
+      python -m cli.main chat
+    """
+    # If --message is not provided, read from stdin
+    if not message:
+        message = input("You: ")
+
+    answer = run_agent(message)
+    typer.echo(f"Agent: {answer}")
+
+
 if __name__ == "__main__":
     app()
 
@@ -153,7 +178,7 @@ if __name__ == "__main__":
 
 
 
-#     # inside project root, in `poetry shell`
+# inside project root, in `poetry shell`
 # poetry run app --help
 # poetry run app weather --city Hyderabad
 # poetry run app crypto --coin bitcoin

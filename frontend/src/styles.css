@@ -105,7 +105,7 @@ body {
     max-width: 100%;                 /* full width */
     min-height: 100vh;               /* full height */
     border-radius: 0;                /* remove big rounded frame */
-    padding: 3.5rem 1rem 1.25rem;      /* tighter padding */
+    padding: 3.5rem 1rem 1.25rem;    /* tighter padding */
     box-shadow: none;                /* flatter look on mobile */
   }
 
@@ -418,6 +418,7 @@ body {
 .sidebar-section {
   font-size: 0.8rem;
   color: var(--text-muted);
+  line-height: 1.5; /* more relaxed text */
 }
 
 .sidebar-section strong {
@@ -425,5 +426,91 @@ body {
   font-size: 0.78rem;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.35rem;
+}
+
+.sidebar-section p {
+  margin: 0.25rem 0 0.6rem;
+}
+
+/* Agent chat area – stretched, roomy, chat-like */
+
+.agent-chat {
+  margin-top: 0.4rem;
+  padding: 0.85rem 0 0.1rem; /* no side padding so it lines up with button width */
+}
+
+.agent-chat-textarea {
+  width: 100%;
+  border-radius: 16px;
+  border: 1px solid var(--border-soft);
+  background: rgba(15, 23, 42, 0.96);
+  color: var(--text-main);
+  padding: 0.9rem 1rem;           /* comfortable padding inside */
+  font-size: 0.9rem;
+  line-height: 1.6;               /* loose, readable text */
+  min-height: 110px;
+  resize: vertical;
+  outline: none;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.7);
+}
+
+.agent-chat-textarea::placeholder {
+  color: #6b7280;
+}
+
+.agent-chat-textarea:focus {
+  border-color: var(--accent);
+  box-shadow:
+    0 0 0 1px var(--accent-soft),
+    0 12px 30px rgba(15, 23, 42, 0.9);
+}
+
+/* Agent answer bubble – like a real agent message */
+
+.agent-chat-answer {
+  margin-top: 0.85rem;
+  border-radius: 18px;
+  padding: 0.9rem 1rem;                    /* padding for text */
+  background: radial-gradient(circle at top left, rgba(37, 99, 235, 0.32), rgba(15, 23, 42, 0.98));
+  border: 1px solid rgba(59, 130, 246, 0.45);
+  max-height: 190px;
+  overflow-y: auto;
+  font-size: 0.9rem;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.8);
+}
+
+.agent-chat-answer .result-title {
+  color: var(--accent);                    /* brighter “Agent Answer” */
+}
+
+.agent-chat-answer .result-sub {
+  color: var(--text-main);                 /* main light text (not grey) */
+}
+
+/* Tip text under the chat */
+
+.agent-chat-tip {
+  margin-top: 0.7rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* Mobile tweaks for chat */
+
+@media (max-width: 768px) {
+  .agent-chat {
+    margin-top: 0.35rem;
+    padding: 0.65rem 0 0;
+  }
+
+  .agent-chat-textarea {
+    font-size: 0.85rem;
+    padding: 0.8rem 0.9rem;
+  }
+
+  .agent-chat-answer {
+    padding: 0.8rem 0.9rem;
+    font-size: 0.86rem;
+  }
 }

@@ -48,6 +48,12 @@ function App() {
   const [weatherHistory, setWeatherHistory] = useState([]); // { city, timeLabel, temperature }
   const [cryptoHistory, setCryptoHistory] = useState([]);   // { coin, timeLabel, price }
 
+  // Chat agent state
+  const [chatMessage, setChatMessage] = useState('');
+  const [chatAnswer, setChatAnswer] = useState('');
+  const [chatLoading, setChatLoading] = useState(false);
+  const [chatError, setChatError] = useState('');
+
   // Handle "Get Info" click or Enter key
   const handleFetch = async (valueOverride) => {
     setError('');
@@ -72,51 +78,88 @@ function App() {
       const data = await res.json();
 
       if (!res.ok) {
-  const msg = data.detail || 'Request failed.';
+        const msg = data.detail || 'Request failed.';
 
-  // If backend reports a rate-limit issue, show a friendly message
-  if (msg.toLowerCase().includes('rate-limited')) {
-    setError(
-      'Crypto data is temporarily unavailable because the provider rate limit was exceeded. Please try again in a few minutes.'
-    );
-  } else {
-    setError(msg);
-  }
-} else {
-  setResult(data);
-  setRawJson(data.raw || data);
+        // If backend reports a rate-limit issue, show a friendly message
+        if (msg.toLowerCase().includes('rate-limited')) {
+          setError(
+            'Crypto data is temporarily unavailable because the provider rate limit was exceeded. Please try again in a few minutes.'
+          );
+        } else {
+          setError(msg);
+        }
+      } else {
+        setResult(data);
+        setRawJson(data.raw || data);
 
-  // Record history point for charts
-  const timeLabel = new Date().toLocaleTimeString(undefined, {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+        // Record history point for charts
+        const timeLabel = new Date().toLocaleTimeString(undefined, {
+          hour: '2-digit',
+          minute: '2-digit',
+        });
 
-  if (mode === 'weather') {
-    setWeatherHistory((prev) => [
-      ...prev,
-      {
-        city: data.city,
-        timeLabel,
-        temperature: data.temperature_c,
-      },
-    ]);
-  } else {
-    setCryptoHistory((prev) => [
-      ...prev,
-      {
-        coin: data.coin_id,
-        timeLabel,
-        price: data.price_usd,
-      },
-    ]);
-  }
-}
+        if (mode === 'weather') {
+          setWeatherHistory((prev) => [
+            ...prev,
+            {
+              city: data.city,
+              timeLabel,
+              temperature: data.temperature_c,
+            },
+          ]);
+        } else {
+          setCryptoHistory((prev) => [
+            ...prev,
+            {
+              coin: data.coin_id,
+              timeLabel,
+              price: data.price_usd,
+            },
+          ]);
+        }
+      }
     } catch (err) {
       console.error(err);
       setError('Network error. Is the backend running on http://localhost:8000?');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Call the LLM agent endpoint
+  const handleChatSubmit = async () => {
+    const trimmed = chatMessage.trim();
+
+    if (!trimmed) {
+      setChatError('Please enter a question for the agent.');
+      setChatAnswer('');
+      return;
+    }
+
+    setChatError('');
+    setChatAnswer('');
+    setChatLoading(true);
+
+    try {
+      const res = await fetch(`${API_BASE}/agent/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: trimmed }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        // Backend returns { detail: "..." } on errors (e.g. OpenAI quota)
+        setChatError(data.detail || 'Agent request failed.');
+      } else {
+        setChatAnswer(data.answer || '');
+      }
+    } catch (err) {
+      console.error(err);
+      setChatError('Network error calling agent. Is the backend running on http://localhost:8000?');
+    } finally {
+      setChatLoading(false);
     }
   };
 
@@ -401,55 +444,113 @@ function App() {
             </div>
           </div>
 
-          {/* Right: System / Future Agent panel */}
+          {/* Right: System / Agent panel */}
           <aside className="card sidebar">
-  <div className="card-title">System</div>
+            <div className="card-title">System</div>
 
-  <div className="sidebar-section">
-    <strong>Phase 1 · Live Tools</strong>
-    This dashboard calls Python tools:
-    <br />
-    <code>get_weather(city)</code> and <code>get_crypto_price(coin)</code>.
-    <br />
-    Raw JSON is saved under:
-    <br />
-    <code>data/weather_*.json</code>
-    <br />
-    <code>data/crypto_*.json</code>.
-  </div>
+            <div className="sidebar-section">
+              <strong>Phase 1 · Live Tools</strong>
+              This dashboard calls Python tools:
+              <br />
+              <code>get_weather(city)</code> and <code>get_crypto_price(coin)</code>.
+              <br />
+              Raw JSON is saved under:
+              <br />
+              <code>data/weather_*.json</code>
+              <br />
+              <code>data/crypto_*.json</code>.
+            </div>
 
-  <div className="sidebar-section">
-    <strong>Phase 2 · Chat + LLM (Planned)</strong>
-    Next, this project will add a chat assistant that:
-    <br />• Understands natural language questions
-    <br />• Calls these tools automatically
-    <br />• Combines weather + crypto into clear answers.
-  </div>
+            <div className="sidebar-section">
+              <strong>Phase 2 · Chat + LLM</strong>
+              <p>
+                Talk to the agent in natural language about weather and crypto.
+                It will call the same live tools and combine the answers.
+              </p>
 
-  <div className="sidebar-section">
-    <strong>Phase 3 · Agentic Automation (Planned)</strong>
-    Future work:
-    <br />• Store history in a database
-    <br />• Trend analysis & AI summaries
-    <br />• Scheduler & condition-based alerts
-    <br />• Telegram notifications.
-  </div>
+              <div className="agent-chat">
+                <textarea
+                  className="agent-chat-textarea"
+                  placeholder="Example: What's the weather in Hyderabad and the price of bitcoin right now?"
+                  value={chatMessage}
+                  // onChange={(e) => setChatMessage(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                      // Ctrl+Enter / Cmd+Enter sends
+                      e.preventDefault();
+                      handleChatSubmit();
+                    }
+                  }
+                }
+                  //   }
+                  // }}
+                  onChange={(e) => {
+                        setChatMessage(e.target.value);
+                        setChatError('');   // clear old error
+                        setChatAnswer('');  // clear old answer as soon as user types
+                      }}
+                />
 
-  <div className="sidebar-section">
-    <strong>Debug & Testing</strong>
-    You can also:
-    <br />• Call the API via Postman:
-    <br />
-    <code>/api/weather?city=...</code>
-    <br />
-    <code>/api/crypto?coin=...</code>
-    <br />• Use the CLI:
-    <br />
-    <code>python -m cli.main weather --city ...</code>
-    <br />
-    <code>python -m cli.main crypto --coin ...</code>
-  </div>
-</aside>
+                <button
+                  type="button"
+                  className="button"
+                  style={{ marginTop: '0.6rem', width: '100%', justifyContent: 'center' }}
+                  onClick={handleChatSubmit}
+                  disabled={chatLoading}
+                >
+                  {chatLoading && <span className="pulse-dot" />}
+                  <span>{chatLoading ? 'Asking agent...' : 'Ask Agent'}</span>
+                </button>
+
+                {chatError && (
+                  <div className="error" style={{ marginTop: '0.6rem' }}>
+                    {chatError}
+                  </div>
+                )}
+
+                {chatAnswer && !chatError && (
+                  <div className="agent-chat-answer">
+                    <div className="result-title">Agent Answer</div>
+                    <div className="result-sub" style={{ whiteSpace: 'pre-wrap' }}>
+                      {chatAnswer}
+                    </div>
+                  </div>
+                )}
+
+                <div className="agent-chat-tip">
+                  Tip: press <code>Ctrl+Enter</code> (or <code>Cmd+Enter</code>) inside the box to send.
+                </div>
+              </div>
+            </div>
+
+            <div className="sidebar-section">
+              <strong>Phase 3 · Agentic Automation (Planned)</strong>
+              Future work:
+              <br />• Store history in a database
+              <br />• Trend analysis & AI summaries
+              <br />• Scheduler & condition-based alerts
+              <br />• Telegram notifications.
+            </div>
+
+            <div className="sidebar-section">
+              <strong>Debug & Testing</strong>
+              You can also:
+              <br />• Call the API via Postman:
+              <br />
+              <code>/api/weather?city=...</code>
+              <br />
+              <code>/api/crypto?coin=...</code>
+              <br />
+              <code>/api/agent/chat</code>
+              <br />• Use the CLI:
+              <br />
+              <code>python -m cli.main weather --city ...</code>
+              <br />
+              <code>python -m cli.main crypto --coin ...</code>
+              <br />
+              <code>python -m cli.main chat -m "your question"</code>
+            </div>
+          </aside>
         </div>
       </div>
     </div>

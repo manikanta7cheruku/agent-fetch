@@ -11,9 +11,10 @@ Later, these functions can be exposed directly to an LLM agent as tools.
 
 from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Any, Dict, Tuple
 
 import httpx
+import time
 
 from app.core.config import settings
 
@@ -25,6 +26,40 @@ class WeatherAPIError(Exception):
 class CryptoAPIError(Exception):
     """Raised for crypto API related errors."""
 
+
+# ---------------------------------------------------------------------------
+# Simple in-memory cache to reduce external API calls (and 429s)
+# ---------------------------------------------------------------------------
+
+# key -> (timestamp, data)
+_CACHE: Dict[str, Tuple[float, Dict[str, Any]]] = {}
+
+# How long to cache entries (seconds)
+CACHE_TTL_SECONDS = 60  # 1 minute; adjust if you want
+
+
+def _cache_get(key: str) -> Dict[str, Any] | None:
+    """Return cached value if it is still fresh, else None."""
+    now = time.time()
+    entry = _CACHE.get(key)
+    if not entry:
+        return None
+    ts, data = entry
+    if now - ts > CACHE_TTL_SECONDS:
+        # Expired
+        _CACHE.pop(key, None)
+        return None
+    return data
+
+
+def _cache_set(key: str, data: Dict[str, Any]) -> None:
+    """Store value in cache with current timestamp."""
+    _CACHE[key] = (time.time(), data)
+
+
+# ---------------------------------------------------------------------------
+# Weather
+# ---------------------------------------------------------------------------
 
 def get_weather(city: str) -> Dict[str, Any]:
     """
@@ -39,6 +74,17 @@ def get_weather(city: str) -> Dict[str, Any]:
     Raises:
         WeatherAPIError: on invalid city, network issues, or API errors.
     """
+    city = city.strip()
+    if not city:
+        raise WeatherAPIError("City name cannot be empty.")
+
+    cache_key = f"weather:{city.lower()}"
+
+    # Try cache first
+    cached = _cache_get(cache_key)
+    if cached is not None:
+        return cached
+
     base_url = "https://api.openweathermap.org/data/2.5/weather"
 
     try:
@@ -64,8 +110,14 @@ def get_weather(city: str) -> Dict[str, Any]:
             f"Weather API error (status {response.status_code}): {response.text}"
         )
 
-    return response.json()
+    data = response.json()
+    _cache_set(cache_key, data)
+    return data
 
+
+# ---------------------------------------------------------------------------
+# Crypto
+# ---------------------------------------------------------------------------
 
 def get_crypto_price(coin: str) -> Dict[str, Any]:
     """
@@ -88,6 +140,17 @@ def get_crypto_price(coin: str) -> Dict[str, Any]:
     Raises:
         CryptoAPIError: on unknown coin, network issues, or API errors.
     """
+    coin = coin.strip().lower()
+    if not coin:
+        raise CryptoAPIError("Coin id cannot be empty.")
+
+    cache_key = f"crypto:{coin}"
+
+    # Try cache first
+    cached = _cache_get(cache_key)
+    if cached is not None:
+        return cached
+
     base_url = "https://api.coingecko.com/api/v3/simple/price"
 
     try:
@@ -125,4 +188,5 @@ def get_crypto_price(coin: str) -> Dict[str, Any]:
             f"Coin '{coin}' not found or has no USD price in CoinGecko."
         )
 
+    _cache_set(cache_key, data)
     return data

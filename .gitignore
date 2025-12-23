@@ -1,0 +1,6 @@
+# Root-level ignores
+.env
+__pycache__/
+*.pyc
+.venv/
+data/
