@@ -1,5 +1,5 @@
 // frontend/src/App.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -53,6 +53,11 @@ function App() {
   const [chatAnswer, setChatAnswer] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
   const [chatError, setChatError] = useState('');
+    // Phase 3 state: toggle + backend history
+  const [phase3Open, setPhase3Open] = useState(false);
+  const [historyItems, setHistoryItems] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState('');
 
   // Handle "Get Info" click or Enter key
   const handleFetch = async (valueOverride) => {
@@ -162,6 +167,34 @@ function App() {
       setChatLoading(false);
     }
   };
+
+    // Load recent history from backend when Phase 3 is opened
+  const loadHistory = async () => {
+    setHistoryLoading(true);
+    setHistoryError('');
+    try {
+      const res = await fetch(`${API_BASE}/history?limit=20`);
+      const data = await res.json();
+      if (!res.ok) {
+        setHistoryError(data.detail || 'Failed to load history.');
+        setHistoryItems([]);
+      } else {
+        setHistoryItems(data);
+      }
+    } catch (err) {
+      console.error(err);
+      setHistoryError('Network error loading history.');
+      setHistoryItems([]);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (phase3Open) {
+      loadHistory();
+    }
+  }, [phase3Open]);
 
   // Build chart data for the current city/coin based on history
   const buildChartData = () => {
@@ -445,9 +478,11 @@ function App() {
           </div>
 
           {/* Right: System / Agent panel */}
+                    {/* Right: System / Agent / Phase 3 panel */}
           <aside className="card sidebar">
             <div className="card-title">System</div>
 
+            {/* Phase 1 */}
             <div className="sidebar-section">
               <strong>Phase 1 · Live Tools</strong>
               This dashboard calls Python tools:
@@ -461,6 +496,7 @@ function App() {
               <code>data/crypto_*.json</code>.
             </div>
 
+            {/* Phase 2: Chat */}
             <div className="sidebar-section">
               <strong>Phase 2 · Chat + LLM</strong>
               <p>
@@ -473,22 +509,18 @@ function App() {
                   className="agent-chat-textarea"
                   placeholder="Example: What's the weather in Hyderabad and the price of bitcoin right now?"
                   value={chatMessage}
-                  // onChange={(e) => setChatMessage(e.target.value)}
+                  onChange={(e) => {
+                    setChatMessage(e.target.value);
+                    setChatError('');
+                    setChatAnswer('');
+                  }}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-                      // Ctrl+Enter / Cmd+Enter sends
+                    // Enter to send, Shift+Enter for new line
+                    if (e.key === 'Enter' && !e.shiftKey) {
                       e.preventDefault();
                       handleChatSubmit();
                     }
-                  }
-                }
-                  //   }
-                  // }}
-                  onChange={(e) => {
-                        setChatMessage(e.target.value);
-                        setChatError('');   // clear old error
-                        setChatAnswer('');  // clear old answer as soon as user types
-                      }}
+                  }}
                 />
 
                 <button
@@ -518,20 +550,124 @@ function App() {
                 )}
 
                 <div className="agent-chat-tip">
-                  Tip: press <code>Ctrl+Enter</code> (or <code>Cmd+Enter</code>) inside the box to send.
+                  Tip: press <code>Enter</code> to send, or <code>Shift+Enter</code> for a new line.
                 </div>
               </div>
             </div>
 
+            {/* Phase 3: toggle + panels */}
             <div className="sidebar-section">
-              <strong>Phase 3 · Agentic Automation (Planned)</strong>
-              Future work:
-              <br />• Store history in a database
-              <br />• Trend analysis & AI summaries
-              <br />• Scheduler & condition-based alerts
-              <br />• Telegram notifications.
+              <strong>Phase 3 · Automations & Insights</strong>
+
+              <button
+                type="button"
+                className="phase3-toggle"
+                onClick={() => setPhase3Open((prev) => !prev)}
+              >
+                {phase3Open ? 'Collapse Phase 3' : 'Enable Phase 3'}
+              </button>
+
+              {phase3Open && (
+                <div className="phase3-panel">
+                  {/* History */}
+                  <div className="phase3-block">
+                    <div className="phase3-block-title">History & Insights</div>
+                    {historyLoading && <div className="phase3-muted">Loading history...</div>}
+                    {historyError && <div className="error">{historyError}</div>}
+                    {!historyLoading && !historyError && historyItems.length === 0 && (
+                      <div className="phase3-muted">
+                        No history yet. Use "Get Info" or "Ask Agent" to generate some data.
+                      </div>
+                    )}
+                    {!historyLoading && historyItems.length > 0 && (
+                      <ul className="history-list">
+                        {historyItems.map((item, idx) => (
+                          <li key={idx} className="history-item">
+                            <div className="history-meta">
+                              <span className="history-kind">{item.kind}</span>
+                              <span className="history-time">
+                                {new Date(item.timestamp).toLocaleTimeString()}
+                              </span>
+                            </div>
+                            <div className="history-query">{item.query}
+                                  <div className="history-query">
+      {item.kind === 'weather' && (
+        <>
+          <strong>{item.query}</strong>
+          {' — '}
+          {item.result?.temperature_c != null && (
+            <>
+              {item.result.temperature_c.toFixed(1)}°C
+              {item.result?.description && ` · ${item.result.description}`}
+            </>
+          )}
+        </>
+      )}
+
+      {item.kind === 'crypto' && (
+        <>
+          <strong>{item.query.toUpperCase()}</strong>
+          {' — '}
+          {item.result?.price_usd != null && (
+            <>${item.result.price_usd.toFixed(2)}</>
+          )}
+          {typeof item.result?.change_24h === 'number' && (
+            <> · {item.result.change_24h.toFixed(2)}% 24h</>
+          )}
+        </>
+      )}
+
+      {item.kind === 'agent' && (
+        <>
+          <strong>Q:</strong> {item.query}
+          {item.result?.answer && (
+            <>
+              <br />
+              <span className="history-answer-snippet">
+                <strong>A:</strong>{' '}
+                {item.result.answer.length > 120
+                  ? item.result.answer.slice(0, 120) + '…'
+                  : item.result.answer}
+              </span>
+            </>
+          )}
+        </>
+      )}
+    </div>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+
+                  {/* Coming Soon blocks */}
+                  <div className="phase3-block">
+                    <div className="phase3-block-title">Schedules (Coming Soon)</div>
+                    <div className="phase3-muted">
+                      Define recurring checks, like daily morning briefings with weather &amp; crypto.
+                    </div>
+                  </div>
+
+                  <div className="phase3-block">
+                    <div className="phase3-block-title">Alerts (Coming Soon)</div>
+                    <div className="phase3-muted">
+                      Configure alerts when prices move sharply or weather crosses thresholds.
+                    </div>
+                  </div>
+
+                  <div className="phase3-block">
+                    <div className="phase3-block-title">Notifications (Coming Soon)</div>
+                    <div className="phase3-muted">
+                      Connect channels like Telegram to receive summaries and alerts even when the
+                      dashboard is closed.
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
+            {/* Debug */}
             <div className="sidebar-section">
               <strong>Debug & Testing</strong>
               You can also:

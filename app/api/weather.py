@@ -12,6 +12,7 @@ from fastapi import APIRouter, HTTPException
 
 from app.models.schemas import WeatherResponse
 from app.services.storage import save_json
+from app.services.history import add_history  # <-- NEW
 from tools import WeatherAPIError, get_weather
 
 router = APIRouter(tags=["weather"])
@@ -51,10 +52,8 @@ def weather_endpoint(city: str) -> WeatherResponse:
             detail="Weather data format unexpected from API.",
         )
 
-    # Save raw JSON to data/weather_<city>.json
-    save_json("weather", city, data)
-
-    return WeatherResponse(
+    # Build response model
+    response_model = WeatherResponse(
         city=name,
         country=country,
         temperature_c=temp,
@@ -63,3 +62,11 @@ def weather_endpoint(city: str) -> WeatherResponse:
         humidity=humidity,
         raw=data,
     )
+
+    # Save raw JSON to data/weather_<city>.json
+    save_json("weather", city, data)
+
+    # Record in Phase 3 history
+    add_history("weather", city, response_model.model_dump())
+
+    return response_model

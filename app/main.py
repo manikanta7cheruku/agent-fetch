@@ -11,7 +11,7 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import crypto, weather, agent  # <-- added agent import
+from app.api import crypto, weather, agent, history # <-- added agent import
 
 # Create FastAPI app instance
 app = FastAPI(
@@ -33,6 +33,7 @@ app.add_middleware(
 app.include_router(weather.router, prefix="/api")
 app.include_router(crypto.router, prefix="/api")
 app.include_router(agent.router, prefix="/api")  # <-- include agent router
+app.include_router(history.router, prefix="/api")  # <-- new
 
 @app.get("/health")
 def health_check():

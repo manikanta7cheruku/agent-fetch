@@ -12,6 +12,7 @@ from fastapi import APIRouter, HTTPException
 
 from app.models.schemas import CryptoResponse
 from app.services.storage import save_json
+from app.services.history import add_history  # <-- NEW
 from tools import CryptoAPIError, get_crypto_price
 
 router = APIRouter(tags=["crypto"])
@@ -50,12 +51,18 @@ def crypto_endpoint(coin: str) -> CryptoResponse:
         except (TypeError, ValueError):
             change_24h = None
 
-    # Save raw JSON to data/crypto_<coin>.json
-    save_json("crypto", coin, data)
-
-    return CryptoResponse(
+    # Build response model
+    response_model = CryptoResponse(
         coin_id=coin,
         price_usd=price,
         change_24h=change_24h,
         raw=data,
     )
+
+    # Save raw JSON to data/crypto_<coin>.json
+    save_json("crypto", coin, data)
+
+    # Record in Phase 3 history
+    add_history("crypto", coin, response_model.model_dump())
+
+    return response_model
