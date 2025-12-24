@@ -316,7 +316,7 @@ function App() {
   }, [phase3Open]);
 
 
-  
+
 
   // When Phase 3 is opened, load both history and schedules
   useEffect(() => {
@@ -798,7 +798,7 @@ function App() {
       <input
         className="input"
         type="text"
-        placeholder="Time (HH:MM UTC, e.g. 08:00)"
+        placeholder="Time (HH:MM IST, e.g. 08:00)"
         value={newScheduleTime}
         onChange={(e) => setNewScheduleTime(e.target.value)}
       />
@@ -865,7 +865,7 @@ function App() {
           </span>
         </div>
         <div className="schedule-sub">
-          Daily at {s.time_of_day} UTC
+          Daily at {s.time_of_day} IST
           {s.city && ` · City: ${s.city}`}
           {s.coin && ` · Coin: ${s.coin.toUpperCase()}`}
         </div>

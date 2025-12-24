@@ -6,6 +6,7 @@ import asyncio
 import uuid
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
+IST_OFFSET = timedelta(hours=5, minutes=30)  # UTC+5:30
 from typing import Any, Dict, List, Optional
 
 from app.services.history import add_history
@@ -36,8 +37,11 @@ _scheduler_task: Optional[asyncio.Task] = None
 
 def _compute_next_run(time_of_day: str, from_dt: Optional[datetime] = None) -> datetime:
     """
-    Compute the next UTC datetime for a given HH:MM (24h) time_of_day.
-    If the time today has already passed, schedule for tomorrow.
+    Compute the next UTC datetime corresponding to a given local IST HH:MM.
+
+    - time_of_day is interpreted as IST (UTC+5:30).
+    - from_dt is in UTC (defaults to datetime.utcnow()).
+    - We compute the next time in IST, then convert back to UTC.
     """
     if from_dt is None:
         from_dt = datetime.utcnow()
@@ -50,10 +54,19 @@ def _compute_next_run(time_of_day: str, from_dt: Optional[datetime] = None) -> d
         # Fallback: run in 1 minute if invalid format
         return from_dt + timedelta(minutes=1)
 
-    candidate = from_dt.replace(hour=hour, minute=minute, second=0, microsecond=0)
-    if candidate <= from_dt:
-        candidate += timedelta(days=1)
-    return candidate
+    # Convert current UTC time to IST
+    now_ist = from_dt + IST_OFFSET
+
+    # Candidate run time in IST
+    candidate_ist = now_ist.replace(hour=hour, minute=minute, second=0, microsecond=0)
+
+    # If the time today has already passed in IST, schedule for tomorrow
+    if candidate_ist <= now_ist:
+        candidate_ist += timedelta(days=1)
+
+    # Convert candidate back to UTC for storage/scheduler
+    candidate_utc = candidate_ist - IST_OFFSET
+    return candidate_utc
 
 
 def create_schedule(

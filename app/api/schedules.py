@@ -22,7 +22,7 @@ class ScheduleCreate(BaseModel):
     time_of_day: str = Field(
         "08:00",
         pattern=r"^\d{2}:\d{2}$",
-        description="UTC time in HH:MM 24h format, e.g. 08:00 or 20:30",
+        description="IST time in HH:MM 24h format (UTC+5:30), e.g. 08:00 or 20:30",
     )
     city: Optional[str] = Field(None, description="City for weather (optional)")
     coin: Optional[str] = Field(None, description="Coin id for crypto (optional)")
