@@ -58,6 +58,23 @@ function App() {
   const [historyItems, setHistoryItems] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyError, setHistoryError] = useState('');
+    // Schedules (Phase 3) UI state
+  const [schedulesOpen, setSchedulesOpen] = useState(false);
+  const [schedules, setSchedules] = useState([]);
+    // Show only the 2 most recently created schedules
+  const visibleSchedules = schedules.slice(-2).reverse();
+  const [schedulesLoading, setSchedulesLoading] = useState(false);
+  const [schedulesError, setSchedulesError] = useState('');
+
+  const [newScheduleName, setNewScheduleName] = useState('Morning Briefing');
+  const [newScheduleTime, setNewScheduleTime] = useState('08:00'); // HH:MM UTC
+  const [newScheduleCity, setNewScheduleCity] = useState('');
+  const [newScheduleCoin, setNewScheduleCoin] = useState('');
+  const [creatingSchedule, setCreatingSchedule] = useState(false);
+
+  // Collapsible placeholders for Alerts / Notifications
+  const [alertsOpen, setAlertsOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   // Handle "Get Info" click or Enter key
   const handleFetch = async (valueOverride) => {
@@ -168,7 +185,7 @@ function App() {
     }
   };
 
-    // Load recent history from backend when Phase 3 is opened
+     // Load recent history from backend when Phase 3 is opened
   const loadHistory = async () => {
     setHistoryLoading(true);
     setHistoryError('');
@@ -190,9 +207,122 @@ function App() {
     }
   };
 
+  // Load schedules from backend
+  const loadSchedules = async () => {
+    setSchedulesLoading(true);
+    setSchedulesError('');
+    try {
+      const res = await fetch(`${API_BASE}/schedules`);
+      const data = await res.json();
+      if (!res.ok) {
+        setSchedulesError(data.detail || 'Failed to load schedules.');
+        setSchedules([]);
+      } else {
+        setSchedules(data);
+      }
+    } catch (err) {
+      console.error(err);
+      setSchedulesError('Network error loading schedules.');
+      setSchedules([]);
+    } finally {
+      setSchedulesLoading(false);
+    }
+  };
+
+  // Create a new daily schedule
+  const handleCreateSchedule = async (e) => {
+    e.preventDefault();
+    if (!newScheduleCity.trim() && !newScheduleCoin.trim()) {
+      setSchedulesError('Please provide at least a city or a coin for the schedule.');
+      return;
+    }
+
+    setSchedulesError('');
+    setCreatingSchedule(true);
+    try {
+      const body = {
+        name: newScheduleName.trim() || 'Daily Check',
+        time_of_day: newScheduleTime || '08:00',
+        city: newScheduleCity.trim() || null,
+        coin: newScheduleCoin.trim().toLowerCase() || null,
+      };
+
+      const res = await fetch(`${API_BASE}/schedules`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setSchedulesError(data.detail || 'Failed to create schedule.');
+      } else {
+        // refresh list
+        await loadSchedules();
+        // keep form values so user can tweak; or reset city/coin if you prefer
+      }
+    } catch (err) {
+      console.error(err);
+      setSchedulesError('Network error creating schedule.');
+    } finally {
+      setCreatingSchedule(false);
+    }
+  };
+
+  // Enable/disable a schedule
+  const handleToggleSchedule = async (scheduleId, enabled) => {
+    try {
+      const res = await fetch(`${API_BASE}/schedules/${scheduleId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setSchedulesError(data.detail || 'Failed to update schedule.');
+      } else {
+        await loadSchedules();
+      }
+    } catch (err) {
+      console.error(err);
+      setSchedulesError('Network error updating schedule.');
+    }
+  };
+
+
+    // Delete a schedule
+  const handleDeleteSchedule = async (scheduleId) => {
+    try {
+      const res = await fetch(`${API_BASE}/schedules/${scheduleId}`, {
+        method: 'DELETE',
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setSchedulesError(data.detail || 'Failed to delete schedule.');
+      } else {
+        await loadSchedules();
+      }
+    } catch (err) {
+      console.error(err);
+      setSchedulesError('Network error deleting schedule.');
+    }
+  };
+
+  // When Phase 3 is opened, load both history and schedules
   useEffect(() => {
     if (phase3Open) {
       loadHistory();
+      loadSchedules();
+    }
+  }, [phase3Open]);
+
+
+  
+
+  // When Phase 3 is opened, load both history and schedules
+  useEffect(() => {
+    if (phase3Open) {
+      loadHistory();
+      loadSchedules();
     }
   }, [phase3Open]);
 
@@ -558,6 +688,11 @@ function App() {
             {/* Phase 3: toggle + panels */}
             <div className="sidebar-section">
               <strong>Phase 3 · Automations & Insights</strong>
+              <p>
+    Enable background checks and a shared activity feed. Schedules can run daily
+    weather/crypto checks even when you are not on the page, with results logged
+    into History. Alerts and notifications will be added next.
+  </p>
 
               <button
                 type="button"
@@ -643,11 +778,123 @@ function App() {
 
                   {/* Coming Soon blocks */}
                   <div className="phase3-block">
-                    <div className="phase3-block-title">Schedules (Coming Soon)</div>
-                    <div className="phase3-muted">
-                      Define recurring checks, like daily morning briefings with weather &amp; crypto.
-                    </div>
-                  </div>
+  <div className="phase3-block-title">Schedules</div>
+  <div className="phase3-muted" style={{ marginBottom: '0.4rem' }}>
+    Create simple daily checks for weather and crypto. Schedules are global.
+  </div>
+
+  {/* Create schedule form */}
+  <form className="schedule-form" onSubmit={handleCreateSchedule}>
+    <div className="schedule-form-row">
+      <input
+        className="input"
+        type="text"
+        placeholder="Schedule name (e.g. Morning Briefing)"
+        value={newScheduleName}
+        onChange={(e) => setNewScheduleName(e.target.value)}
+      />
+    </div>
+    <div className="schedule-form-row">
+      <input
+        className="input"
+        type="text"
+        placeholder="Time (HH:MM UTC, e.g. 08:00)"
+        value={newScheduleTime}
+        onChange={(e) => setNewScheduleTime(e.target.value)}
+      />
+    </div>
+    <div className="schedule-form-row">
+      <input
+        className="input"
+        type="text"
+        placeholder="City (optional, e.g. Hyderabad)"
+        value={newScheduleCity}
+        onChange={(e) => setNewScheduleCity(e.target.value)}
+      />
+    </div>
+    <div className="schedule-form-row">
+      <input
+        className="input"
+        type="text"
+        placeholder="Coin id (optional, e.g. bitcoin)"
+        value={newScheduleCoin}
+        onChange={(e) => setNewScheduleCoin(e.target.value)}
+      />
+    </div>
+    <button
+      type="submit"
+      className="button"
+      style={{ marginTop: '0.5rem', width: '100%', justifyContent: 'center' }}
+      disabled={creatingSchedule}
+    >
+      {creatingSchedule ? 'Creating…' : 'Create Schedule'}
+    </button>
+  </form>
+
+  {/* Schedules list */}
+  {schedulesError && (
+    <div className="error" style={{ marginTop: '0.5rem' }}>
+      {schedulesError}
+    </div>
+  )}
+
+  {schedulesLoading && (
+    <div className="phase3-muted" style={{ marginTop: '0.5rem' }}>
+      Loading schedules…
+    </div>
+  )}
+
+  {!schedulesLoading && !schedulesError && schedules.length === 0 && (
+    <div className="phase3-muted" style={{ marginTop: '0.5rem' }}>
+      No schedules yet. Create one above.
+    </div>
+  )}
+
+ {!schedulesLoading && schedules.length > 0 && (
+  <ul className="schedule-list" style={{ marginTop: '0.6rem' }}>
+    {visibleSchedules.map((s) => (
+      <li key={s.id} className="schedule-item">
+        <div className="schedule-main">
+          <span className="schedule-name">{s.name}</span>
+          <span
+            className={`schedule-pill ${
+              s.enabled ? 'schedule-pill-on' : 'schedule-pill-off'
+            }`}
+          >
+            {s.enabled ? 'ON' : 'OFF'}
+          </span>
+        </div>
+        <div className="schedule-sub">
+          Daily at {s.time_of_day} UTC
+          {s.city && ` · City: ${s.city}`}
+          {s.coin && ` · Coin: ${s.coin.toUpperCase()}`}
+        </div>
+        {s.last_status && (
+          <div className="schedule-status">
+            Last: {s.last_status}
+          </div>
+        )}
+        <div style={{ marginTop: '0.3rem', fontSize: '0.75rem', display: 'flex', gap: '0.4rem' }}>
+          <button
+            type="button"
+            className="phase3-inner-toggle"
+            onClick={() => handleToggleSchedule(s.id, !s.enabled)}
+          >
+            {s.enabled ? 'Disable' : 'Enable'}
+          </button>
+          <button
+            type="button"
+            className="phase3-inner-toggle"
+            onClick={() => handleDeleteSchedule(s.id)}
+          >
+            Delete
+          </button>
+        </div>
+      </li>
+    ))}
+  </ul>
+)}
+</div>
 
                   <div className="phase3-block">
                     <div className="phase3-block-title">Alerts (Coming Soon)</div>

@@ -11,7 +11,8 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import crypto, weather, agent, history # <-- added agent import
+from app.api import crypto, weather, agent, history, schedules # <-- added agent import
+from app.services.schedules import start_scheduler_loop 
 
 # Create FastAPI app instance
 app = FastAPI(
@@ -34,6 +35,14 @@ app.include_router(weather.router, prefix="/api")
 app.include_router(crypto.router, prefix="/api")
 app.include_router(agent.router, prefix="/api")  # <-- include agent router
 app.include_router(history.router, prefix="/api")  # <-- new
+app.include_router(schedules.router, prefix="/api") 
+
+
+@app.on_event("startup")
+async def on_startup() -> None:
+    # Start in-memory scheduler loop for Phase 3 schedules
+    start_scheduler_loop()
+
 
 @app.get("/health")
 def health_check():

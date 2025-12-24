@@ -598,3 +598,107 @@ body {
   font-size: 0.8rem;
   color: var(--text-main);
 }
+
+
+
+
+
+
+.phase3-block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.phase3-inner-toggle {
+  border: none;
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  background: rgba(15, 23, 42, 0.95);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.phase3-inner-toggle:hover {
+  color: var(--accent);
+}
+
+/* Schedules list */
+
+.schedule-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.4rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.schedule-item {
+  border-radius: 10px;
+  padding: 0.45rem 0.55rem;
+  background: rgba(15, 23, 42, 0.94);
+  border: 1px solid rgba(55, 65, 81, 0.7);
+}
+
+.schedule-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  margin-bottom: 0.15rem;
+}
+
+.schedule-name {
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.schedule-pill {
+  border-radius: 999px;
+  padding: 0.1rem 0.45rem;
+  font-size: 0.7rem;
+}
+
+.schedule-pill-on {
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+}
+
+.schedule-pill-off {
+  background: rgba(148, 163, 184, 0.15);
+  color: #9ca3af;
+}
+
+.schedule-sub {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.schedule-status {
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--text-main);
+}
+
+
+
+
+
+
+
+
+
+
+
+.schedule-form {
+  margin-top: 0.3rem;
+}
+
+.schedule-form-row {
+  margin-top: 0.3rem;
+}
