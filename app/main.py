@@ -11,7 +11,7 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import crypto, weather, agent, history, schedules, alerts # <-- added agent import
+from app.api import crypto, weather, agent, history, schedules, alerts, debug # <-- added agent import
 from app.services.schedules import start_scheduler_loop 
 from app.services.alerts import start_alerts_loop
 
@@ -38,6 +38,7 @@ app.include_router(agent.router, prefix="/api")  # <-- include agent router
 app.include_router(history.router, prefix="/api")  # <-- new
 app.include_router(schedules.router, prefix="/api") 
 app.include_router(alerts.router, prefix="/api") 
+app.include_router(debug.router, prefix="/api") 
 
 
 @app.on_event("startup")

@@ -34,6 +34,9 @@ class AlertCreate(BaseModel):
     city: Optional[str] = Field(
         None, description="City name for weather_temp alerts"
     )
+    chat_id: Optional[str] = Field(
+        None, description="Telegram chat id to notify (optional)"
+    )
 
 
 class AlertOut(BaseModel):
@@ -45,6 +48,7 @@ class AlertOut(BaseModel):
     threshold: float
     coin: Optional[str] = None
     city: Optional[str] = None
+    chat_id: Optional[str] = None
     last_trigger: Optional[str] = None
     last_status: Optional[str] = None
 
@@ -69,6 +73,7 @@ def create_alert_endpoint(body: AlertCreate) -> AlertOut:
             threshold=body.threshold,
             coin=body.coin.strip().lower() if body.coin else None,
             city=body.city.strip() if body.city else None,
+            chat_id=body.chat_id.strip() if body.chat_id else None,
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e

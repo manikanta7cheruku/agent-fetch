@@ -15,6 +15,7 @@ from tools import (
     get_crypto_price,
     get_weather,
 )
+from notifications.telegram import send_telegram_message
 
 AlertType = Literal["crypto_change", "weather_temp"]
 Operator = Literal[">", "<"]
@@ -30,6 +31,7 @@ class Alert:
     threshold: float       # % for crypto_change, °C for weather_temp
     coin: Optional[str] = None   # for crypto_change
     city: Optional[str] = None   # for weather_temp
+    chat_id: Optional[str] = None
     last_trigger: Optional[str] = None  # ISO time last triggered
     last_status: Optional[str] = None   # last trigger message
 
@@ -48,6 +50,7 @@ def create_alert(
     threshold: float,
     coin: Optional[str] = None,
     city: Optional[str] = None,
+    chat_id: Optional[str] = None,      # <-- NEW
 ) -> Dict[str, Any]:
     """
     Create an alert. For now we support:
@@ -69,6 +72,7 @@ def create_alert(
         threshold=float(threshold),
         coin=coin or None,
         city=city or None,
+        chat_id=chat_id or None,        # <-- NEW
         last_trigger=None,
         last_status=None,
     )
@@ -177,6 +181,16 @@ async def _execute_alert(alert: Alert, run_time: datetime) -> None:
 
     # Log into history like schedules, but with [Alert] prefix
     add_history("agent", f"[Alert] {alert.name}", {"answer": message})
+
+        # Optional: send Telegram notification if this alert has a chat_id
+    if alert.chat_id:
+        try:
+            await send_telegram_message(
+                alert.chat_id,
+                f"[Alert] {alert.name}\n{message}",
+            )
+        except Exception as e:
+            print(f"[alerts] telegram send failed: {e}")
 
 
 async def _alerts_loop() -> None:

@@ -687,18 +687,14 @@ body {
 
 
 
-
-
-
-
-
-
-
-
 .schedule-form {
   margin-top: 0.3rem;
 }
 
 .schedule-form-row {
+  margin-top: 0.3rem;
+}
+
+.alert-form {
   margin-top: 0.3rem;
 }

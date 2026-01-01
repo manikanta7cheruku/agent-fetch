@@ -26,6 +26,10 @@ class ScheduleCreate(BaseModel):
     )
     city: Optional[str] = Field(None, description="City for weather (optional)")
     coin: Optional[str] = Field(None, description="Coin id for crypto (optional)")
+    chat_id: Optional[str] = Field(
+        None,
+        description="Telegram chat ID to notify when this schedule runs (optional)",
+    )
 
 
 class ScheduleOut(BaseModel):
@@ -35,6 +39,7 @@ class ScheduleOut(BaseModel):
     time_of_day: str
     city: Optional[str] = None
     coin: Optional[str] = None
+    chat_id: Optional[str] = None
     last_run: Optional[str] = None
     next_run: Optional[str] = None
     last_status: Optional[str] = None
@@ -70,6 +75,7 @@ def create_schedule_endpoint(body: ScheduleCreate) -> ScheduleOut:
             time_of_day=body.time_of_day,
             city=body.city.strip() if body.city else None,
             coin=body.coin.strip().lower() if body.coin else None,
+            chat_id=body.chat_id.strip() if body.chat_id else None,
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e

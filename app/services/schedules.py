@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import uuid
+from notifications.telegram import send_telegram_message
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 IST_OFFSET = timedelta(hours=5, minutes=30)  # UTC+5:30
@@ -26,6 +27,7 @@ class Schedule:
     time_of_day: str  # "HH:MM" in 24h format, UTC
     city: Optional[str] = None
     coin: Optional[str] = None
+    chat_id: Optional[str] = None   
     last_run: Optional[str] = None   # ISO UTC string
     next_run: Optional[str] = None   # ISO UTC string
     last_status: Optional[str] = None
@@ -74,6 +76,7 @@ def create_schedule(
     time_of_day: str,
     city: Optional[str] = None,
     coin: Optional[str] = None,
+    chat_id: Optional[str] = None, 
 ) -> Dict[str, Any]:
     """
     Create a daily schedule. At least one of city or coin must be provided.
@@ -92,6 +95,7 @@ def create_schedule(
         time_of_day=time_of_day,
         city=city or None,
         coin=coin or None,
+        chat_id=chat_id or None,  
         last_run=None,
         next_run=next_run_dt.isoformat() + "Z",
         last_status=None,
@@ -201,6 +205,16 @@ async def _execute_schedule(sched: Schedule, run_time: datetime) -> None:
 
     # Add to history as an 'agent'-style entry
     add_history("agent", f"[Schedule] {sched.name}", {"answer": summary})
+
+        # Optional Telegram notification for this schedule
+    if sched.chat_id:
+        try:
+            await send_telegram_message(
+                sched.chat_id,
+                f"[Schedule] {sched.name}\n{summary}",
+            )
+        except Exception as e:
+            print(f"[scheduler] telegram send failed: {e}")
 
 
 async def _scheduler_loop() -> None:

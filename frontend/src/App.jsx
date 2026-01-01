@@ -70,7 +70,22 @@ function App() {
   const [newScheduleTime, setNewScheduleTime] = useState('08:00'); // HH:MM UTC
   const [newScheduleCity, setNewScheduleCity] = useState('');
   const [newScheduleCoin, setNewScheduleCoin] = useState('');
+  const [newScheduleChatId, setNewScheduleChatId] = useState('');
   const [creatingSchedule, setCreatingSchedule] = useState(false);
+
+    // Alerts (Phase 3) UI state
+  const [alerts, setAlerts] = useState([]);
+  const [alertsLoading, setAlertsLoading] = useState(false);
+  const [alertsError, setAlertsError] = useState('');
+
+  const [newAlertName, setNewAlertName] = useState('BTC Volatility');
+  const [newAlertType, setNewAlertType] = useState('crypto_change'); // 'crypto_change' | 'weather_temp'
+  const [newAlertOperator, setNewAlertOperator] = useState('>');      // '>' or '<'
+  const [newAlertThreshold, setNewAlertThreshold] = useState('5');    // string, convert to number
+  const [newAlertCoin, setNewAlertCoin] = useState('bitcoin');
+  const [newAlertCity, setNewAlertCity] = useState('');
+  const [creatingAlert, setCreatingAlert] = useState(false);
+  const [newAlertChatId, setNewAlertChatId] = useState(''); 
 
   // Collapsible placeholders for Alerts / Notifications
   const [alertsOpen, setAlertsOpen] = useState(false);
@@ -186,6 +201,7 @@ function App() {
   };
 
      // Load recent history from backend when Phase 3 is opened
+    // Load recent history from backend when Phase 3 is opened
   const loadHistory = async () => {
     setHistoryLoading(true);
     setHistoryError('');
@@ -245,6 +261,7 @@ function App() {
         time_of_day: newScheduleTime || '08:00',
         city: newScheduleCity.trim() || null,
         coin: newScheduleCoin.trim().toLowerCase() || null,
+        chat_id: newScheduleChatId.trim() || null,
       };
 
       const res = await fetch(`${API_BASE}/schedules`, {
@@ -256,9 +273,7 @@ function App() {
       if (!res.ok) {
         setSchedulesError(data.detail || 'Failed to create schedule.');
       } else {
-        // refresh list
         await loadSchedules();
-        // keep form values so user can tweak; or reset city/coin if you prefer
       }
     } catch (err) {
       console.error(err);
@@ -288,8 +303,7 @@ function App() {
     }
   };
 
-
-    // Delete a schedule
+  // Delete a schedule
   const handleDeleteSchedule = async (scheduleId) => {
     try {
       const res = await fetch(`${API_BASE}/schedules/${scheduleId}`, {
@@ -306,6 +320,127 @@ function App() {
       setSchedulesError('Network error deleting schedule.');
     }
   };
+
+  // Load alerts from backend
+  const loadAlerts = async () => {
+    setAlertsLoading(true);
+    setAlertsError('');
+    try {
+      const res = await fetch(`${API_BASE}/alerts`);
+      const data = await res.json();
+      if (!res.ok) {
+        setAlertsError(data.detail || 'Failed to load alerts.');
+        setAlerts([]);
+      } else {
+        setAlerts(data);
+      }
+    } catch (err) {
+      console.error(err);
+      setAlertsError('Network error loading alerts.');
+      setAlerts([]);
+    } finally {
+      setAlertsLoading(false);
+    }
+  };
+
+  // Create alert
+  const handleCreateAlert = async (e) => {
+    e.preventDefault();
+
+    const thr = parseFloat(newAlertThreshold);
+    if (Number.isNaN(thr)) {
+      setAlertsError('Please enter a numeric threshold.');
+      return;
+    }
+
+    // Type-specific validation
+    if (newAlertType === 'crypto_change' && !newAlertCoin.trim()) {
+      setAlertsError('Coin is required for crypto alerts.');
+      return;
+    }
+    if (newAlertType === 'weather_temp' && !newAlertCity.trim()) {
+      setAlertsError('City is required for weather alerts.');
+      return;
+    }
+
+    setAlertsError('');
+    setCreatingAlert(true);
+    try {
+      const body = {
+        name: newAlertName.trim() || 'Alert',
+        type: newAlertType,
+        operator: newAlertOperator,
+        threshold: thr,
+        coin: newAlertType === 'crypto_change' ? newAlertCoin.trim().toLowerCase() : null,
+        city: newAlertType === 'weather_temp' ? newAlertCity.trim() : null,
+        chat_id: newAlertChatId.trim() || null,  
+      };
+
+      const res = await fetch(`${API_BASE}/alerts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setAlertsError(data.detail || 'Failed to create alert.');
+      } else {
+        await loadAlerts();
+      }
+    } catch (err) {
+      console.error(err);
+      setAlertsError('Network error creating alert.');
+    } finally {
+      setCreatingAlert(false);
+    }
+  };
+
+  // Enable/disable alert
+  const handleToggleAlert = async (alertId, enabled) => {
+    try {
+      const res = await fetch(`${API_BASE}/alerts/${alertId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setAlertsError(data.detail || 'Failed to update alert.');
+      } else {
+        await loadAlerts();
+      }
+    } catch (err) {
+      console.error(err);
+      setAlertsError('Network error updating alert.');
+    }
+  };
+
+  // Delete alert
+  const handleDeleteAlert = async (alertId) => {
+    try {
+      const res = await fetch(`${API_BASE}/alerts/${alertId}`, {
+        method: 'DELETE',
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setAlertsError(data.detail || 'Failed to delete alert.');
+      } else {
+        await loadAlerts();
+      }
+    } catch (err) {
+      console.error(err);
+      setAlertsError('Network error deleting alert.');
+    }
+  };
+
+  // When Phase 3 is opened, load history, schedules, alerts
+  useEffect(() => {
+    if (phase3Open) {
+      loadHistory();
+      loadSchedules();
+      loadAlerts();
+    }
+  }, [phase3Open]);
 
   // When Phase 3 is opened, load both history and schedules
   useEffect(() => {
@@ -821,6 +956,15 @@ function App() {
         onChange={(e) => setNewScheduleCoin(e.target.value)}
       />
     </div>
+        <div className="schedule-form-row">
+        <input
+          className="input"
+          type="text"
+          placeholder="Telegram chat ID (optional)"
+          value={newScheduleChatId}
+          onChange={(e) => setNewScheduleChatId(e.target.value)}
+          />
+        </div>
     <button
       type="submit"
       className="button"
@@ -868,6 +1012,7 @@ function App() {
           Daily at {s.time_of_day} IST
           {s.city && ` · City: ${s.city}`}
           {s.coin && ` · Coin: ${s.coin.toUpperCase()}`}
+          {s.chat_id && ` · Telegram: ${s.chat_id}`}
         </div>
         {s.last_status && (
           <div className="schedule-status">
@@ -896,12 +1041,173 @@ function App() {
 )}
 </div>
 
-                  <div className="phase3-block">
-                    <div className="phase3-block-title">Alerts (Coming Soon)</div>
-                    <div className="phase3-muted">
-                      Configure alerts when prices move sharply or weather crosses thresholds.
-                    </div>
-                  </div>
+                 <div className="phase3-block">
+  <div className="phase3-block-title">Alerts</div>
+  <div className="phase3-muted" style={{ marginBottom: '0.4rem' }}>
+    Define simple global alerts. When conditions are met, triggers are logged into
+    History as [Alert] entries and, if a Telegram chat ID is set, a message is sent.
+  </div>
+
+  {/* Create alert form */}
+  <form className="alert-form" onSubmit={handleCreateAlert}>
+    <div className="schedule-form-row">
+      <input
+        className="input"
+        type="text"
+        placeholder="Alert name (e.g. BTC Volatility)"
+        value={newAlertName}
+        onChange={(e) => setNewAlertName(e.target.value)}
+      />
+    </div>
+
+    <div className="schedule-form-row">
+      <select
+        className="input"
+        value={newAlertType}
+        onChange={(e) => setNewAlertType(e.target.value)}
+      >
+        <option value="crypto_change">Crypto 24h % change</option>
+        <option value="weather_temp">Weather temperature</option>
+      </select>
+    </div>
+
+    <div className="schedule-form-row" style={{ display: 'flex', gap: '0.5rem' }}>
+      <select
+        className="input"
+        style={{ maxWidth: '80px' }}
+        value={newAlertOperator}
+        onChange={(e) => setNewAlertOperator(e.target.value)}
+      >
+        <option value=">">&gt;</option>
+        <option value="<">&lt;</option>
+      </select>
+      <input
+        className="input"
+        type="text"
+        placeholder="Threshold (e.g. 5 for 5%)"
+        value={newAlertThreshold}
+        onChange={(e) => setNewAlertThreshold(e.target.value)}
+      />
+    </div>
+
+    {newAlertType === 'crypto_change' && (
+      <div className="schedule-form-row">
+        <input
+          className="input"
+          type="text"
+          placeholder="Coin id (e.g. bitcoin)"
+          value={newAlertCoin}
+          onChange={(e) => setNewAlertCoin(e.target.value)}
+        />
+      </div>
+    )}
+
+    {newAlertType === 'weather_temp' && (
+      <div className="schedule-form-row">
+        <input
+          className="input"
+          type="text"
+          placeholder="City (e.g. Hyderabad)"
+          value={newAlertCity}
+          onChange={(e) => setNewAlertCity(e.target.value)}
+        />
+      </div>
+    )}
+
+    <button
+      type="submit"
+      className="button"
+      style={{ marginTop: '0.5rem', width: '100%', justifyContent: 'center' }}
+      disabled={creatingAlert}
+    >
+      {creatingAlert ? 'Creating…' : 'Create Alert'}
+    </button>
+  </form>
+
+    <div className="schedule-form-row">
+    <input
+      className="input"
+      type="text"
+      placeholder="Telegram chat ID (optional)"
+      value={newAlertChatId}
+      onChange={(e) => setNewAlertChatId(e.target.value)}
+    />
+  </div>
+
+  {/* Alerts list */}
+  {alertsError && (
+    <div className="error" style={{ marginTop: '0.5rem' }}>
+      {alertsError}
+    </div>
+  )}
+
+  {alertsLoading && (
+    <div className="phase3-muted" style={{ marginTop: '0.5rem' }}>
+      Loading alerts…
+    </div>
+  )}
+
+  {!alertsLoading && !alertsError && alerts.length === 0 && (
+    <div className="phase3-muted" style={{ marginTop: '0.5rem' }}>
+      No alerts yet. Create one above.
+    </div>
+  )}
+
+  {!alertsLoading && alerts.length > 0 && (
+    <ul className="schedule-list" style={{ marginTop: '0.6rem' }}>
+      {alerts.map((a) => (
+        <li key={a.id} className="schedule-item">
+          <div className="schedule-main">
+            <span className="schedule-name">{a.name}</span>
+            <span
+              className={`schedule-pill ${
+                a.enabled ? 'schedule-pill-on' : 'schedule-pill-off'
+              }`}
+            >
+              {a.enabled ? 'ON' : 'OFF'}
+            </span>
+          </div>
+                 <div className="schedule-sub">
+          {a.type === 'crypto_change' && (
+            <>
+              Crypto: {a.coin?.toUpperCase() || 'N/A'} · 24h change {a.operator}{' '}
+              {a.threshold.toFixed(2)}%
+            </>
+          )}
+          {a.type === 'weather_temp' && (
+            <>
+              Weather: {a.city || 'N/A'} · Temp {a.operator}{' '}
+              {a.threshold.toFixed(1)}°C
+            </>
+          )}
+          {a.chat_id && ` · Telegram: ${a.chat_id}`}
+        </div>
+          {a.last_status && (
+            <div className="schedule-status">
+              Last: {a.last_status}
+            </div>
+          )}
+          <div style={{ marginTop: '0.3rem', fontSize: '0.75rem', display: 'flex', gap: '0.4rem' }}>
+            <button
+              type="button"
+              className="phase3-inner-toggle"
+              onClick={() => handleToggleAlert(a.id, !a.enabled)}
+            >
+              {a.enabled ? 'Disable' : 'Enable'}
+            </button>
+            <button
+              type="button"
+              className="phase3-inner-toggle"
+              onClick={() => handleDeleteAlert(a.id)}
+            >
+              Delete
+            </button>
+          </div>
+        </li>
+      ))}
+    </ul>
+  )}
+</div>
 
                   <div className="phase3-block">
                     <div className="phase3-block-title">Notifications (Coming Soon)</div>
